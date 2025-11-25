@@ -57,16 +57,16 @@
 <body>
   <div class="row">
     <div class="column left">
-      <canvas id="myCanvas" width="600" height="600"
+      <canvas id="myCanvas" width="448" height="448"
         style="border:1px solid #000000; position: absolute; left: 100px; top: 80px; z-index: 1;">CANVAS FOR
         SIMULATION</canvas>
-      <canvas id="myLayer" width="600" height="600"
+      <canvas id="myLayer" width="448" height="448"
         style="border:1px solid #000000; position: absolute; left: 100px; top: 80px; z-index: 0;">LAYER</canvas>
       <div style="line-height: 150%;">
         <button onclick="clearInterval(timer);clearCanvas('myCanvas');initialize();drawParticles();distplot();motion()"
           style="font-size: medium;"><b>Start!</b></button><br>
         <button id="trajectoryControl" onclick="changeTrajectoryState()">Show Trajectory</button>
-        <button id="boundaryCondition" onclick="changeBoundaryCondition()">Rigid Boundary</button>
+        <button id="boundaryCondition" onclick="changeBoundaryCondition()">Periodic Boundary</button>
       </div>
     </div>
     <div class="column right">

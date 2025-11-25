@@ -1,15 +1,15 @@
-var N = 400;//total number of particles 400 or 900
-var r = 5;//particle radius in px 5 or 3
-var m;
-var R = 40;//pollen size in px 30
-var M;
+var N = 300;//total number of particles 400 or 900
+var m_min = Math.pow(3, 2); // minimum mass based on min radius 3
+var m_max = Math.pow(15, 2); // maximum mass based on max radius 15
+var R = 3;//pollen size in px 30
+var M = Math.pow(R, 2);
 var IVD;
 var molecule = [];
-var canvasSize = 600;//in px 600
+var canvasSize = 448;//in px 600
 var dT = 10;
 
 var trajectoryState = false;
-var periodicBoundary = true;
+var periodicBoundary = false;
 var timer;
 var collision_x = [];
 var collision_y = [];
@@ -18,23 +18,31 @@ var collision_count_current = 0;
 var collision_count_limit = 50;
 
 document.getElementById("Number").value = N;
-document.getElementById("lowerRadius").value = r;
+// document.getElementById("lowerRadius").value = r;
 document.getElementById("upperRadius").value = R;
 
 var ctx_myLayer = document.getElementById("myLayer").getContext("2d");
 var ctx_myCanvas = document.getElementById("myCanvas").getContext("2d");
 
 function initialize() {
-  m = Math.pow(r, 2);
-  M = Math.pow(R, 2);
   var v_0 = [];
   molecule = [];
   v_0 = randomNormalDistribution();
   for (var i = 0; i < N + 1; i++) {
+    var current_radius;
+    var current_mass;
+    if (i === 0) { // Pollen particle
+      current_radius = R;
+      current_mass = M;
+    } else { // Other particles
+      current_radius = Math.floor(Math.random() * (15 - 3 + 1)) + 3; // Random radius between 3 and 15
+      current_mass = Math.pow(current_radius, 2);
+    }
+
     var position_x = Math.random() * canvasSize / Math.sqrt(N) + (i % Math.sqrt(N)) * canvasSize / Math.sqrt(N);
     var position_y = Math.random() * canvasSize / Math.sqrt(N) + Math.floor(i / Math.sqrt(N)) * canvasSize / Math.sqrt(N);
     var distance_to_pollen = Math.sqrt(Math.pow(position_x - canvasSize / 2, 2) + Math.pow(position_y - canvasSize / 2, 2));
-    while (distance_to_pollen <= (r + R)) {
+    while (distance_to_pollen <= (current_radius + R)) { // Use current_radius
       position_x = Math.random() * canvasSize;
       position_y = Math.random() * canvasSize;
       distance_to_pollen = Math.sqrt(Math.pow(position_x - canvasSize / 2, 2) + Math.pow(position_y - canvasSize / 2, 2));
@@ -46,7 +54,9 @@ function initialize() {
       xvelocity: (IVD) ? (Math.random() * 3.6 - 1.8) : v[0],
       yvelocity: (IVD) ? (Math.random() * 3.6 - 1.8) : v[1],
       xclass: Math.floor(this.xvalue / (canvasSize / 10)),
-      yclass: Math.floor(this.yvalue / (canvasSize / 10))
+      yclass: Math.floor(this.yvalue / (canvasSize / 10)),
+      radius: current_radius,
+      mass: current_mass
     }
   }
 }
@@ -61,24 +71,28 @@ function randomNormalDistribution() {
   return [u * c, v * c];//2つの標準正規分布に従う乱数を返す。それらを配列に格納して返す。
 }
 
-function createCircle(x, y, r, cmap, ctx) {
+function createCircle(x, y, r_val, cmap, ctx) {
   //var cs=document.getElementById(canvasName);
   //var ctx=cs.getContext("2d");
   ctx.fillStyle = cmap;//"#ADD8E6" for lightblue; "#CD5C5C" for indian red; "#87CEEB" for skyblue
   ctx.beginPath();
-  ctx.arc(x, y, r, 0, 2 * Math.PI);
+  ctx.arc(x, y, r_val, 0, 2 * Math.PI);
   ctx.closePath();     //パスを閉じる
   ctx.fill();
 }
 function clearCanvas(canvasName) {
   var cs = document.getElementById(canvasName);
   var ctx = cs.getContext("2d");
+  ctx.save();
+  ctx.fillStyle = "#000000"; // Set fill style to black
+  ctx.fillRect(0, 0, cs.width, cs.height); // Fill the entire canvas with black
+  ctx.restore();
   ctx.clearRect(0, 0, cs.width, cs.height);
 }
 function drawParticles() {
   clearCanvas("myCanvas");
   for (var i = 0; i < N + 1; i++) {
-    createCircle(molecule[i].xvalue, molecule[i].yvalue, r, "#00BFFF", ctx_myCanvas);
+    createCircle(molecule[i].xvalue, molecule[i].yvalue, molecule[i].radius, "#00BFFF", ctx_myCanvas);
   }
 }
 function drawTrajectory() {
@@ -87,8 +101,8 @@ function drawTrajectory() {
 
 function move() {
   for (var i = 0; i < N + 1; i++) {
-    var radius_i = (i === 0) ? R : r;
-    var mass_i = (i === 0) ? M : m;
+    var radius_i = molecule[i].radius;
+    var mass_i = molecule[i].mass;
 
     molecule[i].xvalue += molecule[i].xvelocity;
     molecule[i].yvalue += molecule[i].yvelocity;
@@ -124,8 +138,8 @@ function move() {
 
     if (i != 0) {//液体分子が他の粒子（花粉を含む）と衝突する
       for (var j = 0; j < N + 1 && j != i; j++) {
-        var radius_j = (j === 0) ? R : r;
-        var mass_j = (j === 0) ? M : m;
+        var radius_j = molecule[j].radius;
+        var mass_j = molecule[j].mass;
 
         var x1 = molecule[i].xvalue;
         var x2 = molecule[j].xvalue;
@@ -225,8 +239,21 @@ function move() {
     }
   }
 }
+
+function saveCanvasFrame(frameNumber) {
+  var canvas = document.getElementById('myCanvas');
+  var dataURL = canvas.toDataURL('image/png');
+  var link = document.createElement('a');
+  link.href = dataURL;
+  link.download = `simulation_frame_${String(frameNumber).padStart(4, '0')}.png`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
 function motion() {
   var count = 0;
+  var savedImageCount = 0;
   collision_count = 0;
   createMonitorBG();
   timer = setInterval(function () {
@@ -234,6 +261,13 @@ function motion() {
     count += 1;
     move();
     drawParticles();
+
+    // Save every 100ms (10 frames) for 10 seconds (100 images)
+    if (count % 10 === 0 && savedImageCount < 100) {
+      saveCanvasFrame(savedImageCount);
+      savedImageCount++;
+    }
+
     if (trajectoryState) drawTrajectory();
     if (count % 100 == 0) {
       distplot();
@@ -265,23 +299,23 @@ function changeBoundaryCondition() {
 function changeParameter() {
   var trialN = Number(document.getElementById('Number').value);
   var trialR = Number(document.getElementById('upperRadius').value);
-  var trialr = Number(document.getElementById('lowerRadius').value);
+  // var trialr = Number(document.getElementById('lowerRadius').value);
   if (trialN < 100 || trialN > 1200) {
     alert('N is not in the range of [100,1200]')
   }
   else if (trialR < 3 || trialR > 50) {
     alert('R is not in the range of [3,50]')
   }
-  else if (trialr < 3 || trialr > 20) {
-    alert('r is not in the range of [3,20]')
-  }
+  // else if (trialr < 3 || trialr > 20) {
+  //   alert('r is not in the range of [3,20]')
+  // }
   else {
     clearInterval(timer);
     clearCanvas("myCanvas");
     clearCanvas("myLayer");
     N = Number(document.getElementById("Number").value);
     R = Number(document.getElementById("upperRadius").value);
-    r = Number(document.getElementById("lowerRadius").value);
+    // r = Number(document.getElementById("lowerRadius").value);
     IVD = document.getElementsByName("IVD");
     IVD = (IVD[0].checked === true);
     initialize();
@@ -443,7 +477,7 @@ function createMonitor() {
     if (i <= collision_count_current) ctx_monitor_2.globalAlpha = (1 - Math.pow((collision_count_current - i) / collision_count_limit, 2));
     else ctx_monitor_2.globalAlpha = (1 - Math.pow((collision_count_current + collision_count_limit - i) / collision_count_limit, 2));
     ctx_monitor_2.beginPath();
-    ctx_monitor_2.arc(60 + collision_x[i] * R, 60 + collision_y[i] * R, r, 0, 2 * Math.PI);
+    ctx_monitor_2.arc(60 + collision_x[i] * R, 60 + collision_y[i] * R, 5, 0, 2 * Math.PI); // Changed to 5 for small particle visualization
     ctx_monitor_2.closePath();     //パスを閉じる
     ctx_monitor_2.fill();
   }
