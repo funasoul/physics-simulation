@@ -10,6 +10,7 @@ var dT = 10;
 
 var trajectoryState = false;
 var periodicBoundary = false;
+var monitorState = false;
 var timer;
 var collision_x = [];
 var collision_y = [];
@@ -18,7 +19,6 @@ var collision_count_current = 0;
 var collision_count_limit = 50;
 
 document.getElementById("Number").value = N;
-// document.getElementById("lowerRadius").value = r;
 document.getElementById("upperRadius").value = R;
 
 var ctx_myLayer = document.getElementById("myLayer").getContext("2d");
@@ -203,7 +203,7 @@ function move() {
               }
 
               var b = (v_x_relative_to_c_i_normalized * (y2 - y1) - v_y_relative_to_c_i_normalized * (x2 - x1));
-              var theta = 2 * Math.acos(b / (radius_i + radius_j));//scatter angle from 0 to 2*pi; 逆时针为正
+              var theta = 2 * Math.acos(b / (radius_i + radius_j));//scatter angle from 0 to 2*pi; 反時計回りを正とする
 
               var alpha;
               if (v_y_relative_to_c_i_normalized >= 0) {
@@ -255,7 +255,6 @@ function motion() {
   var count = 0;
   var savedImageCount = 0;
   collision_count = 0;
-  createMonitorBG();
   timer = setInterval(function () {
     var collision_last_count = collision_count;
     count += 1;
@@ -278,7 +277,7 @@ function motion() {
       collision_count_current = collision_count;
       collision_count = (collision_count + 1) % collision_count_limit;
     }
-    createMonitor();
+    if (monitorState) createMonitor();
   }, dT);
 }
 
@@ -292,6 +291,17 @@ function changeTrajectoryState() {
     document.getElementById("trajectoryControl").innerHTML = "Hide Trajectory";
   }
 }
+function changeMonitorState() {
+  var checkbox = document.getElementById('monitorControl');
+  monitorState = checkbox.checked;
+  if (monitorState) {
+    createMonitorBG();
+  } else {
+    clearCanvas('myMonitor_layer1');
+    clearCanvas('myMonitor_layer2');
+    clearCanvas('myMonitor_layer3');
+  }
+}
 function changeBoundaryCondition() {
   periodicBoundary = (!periodicBoundary);
   document.getElementById("boundaryCondition").innerHTML = (periodicBoundary) ? "Rigid Boundary" : "Periodic Boundary";
@@ -299,23 +309,18 @@ function changeBoundaryCondition() {
 function changeParameter() {
   var trialN = Number(document.getElementById('Number').value);
   var trialR = Number(document.getElementById('upperRadius').value);
-  // var trialr = Number(document.getElementById('lowerRadius').value);
   if (trialN < 100 || trialN > 1200) {
     alert('N is not in the range of [100,1200]')
   }
   else if (trialR < 3 || trialR > 50) {
     alert('R is not in the range of [3,50]')
   }
-  // else if (trialr < 3 || trialr > 20) {
-  //   alert('r is not in the range of [3,20]')
-  // }
   else {
     clearInterval(timer);
     clearCanvas("myCanvas");
     clearCanvas("myLayer");
     N = Number(document.getElementById("Number").value);
     R = Number(document.getElementById("upperRadius").value);
-    // r = Number(document.getElementById("lowerRadius").value);
     IVD = document.getElementsByName("IVD");
     IVD = (IVD[0].checked === true);
     initialize();

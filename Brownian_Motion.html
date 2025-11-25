@@ -20,7 +20,7 @@
     }
 
     .column.left {
-      width: 750px;
+      width: 598px;
     }
 
     .column.right {
@@ -66,7 +66,8 @@
         <button onclick="clearInterval(timer);clearCanvas('myCanvas');initialize();drawParticles();distplot();motion()"
           style="font-size: medium;"><b>Start!</b></button><br>
         <button id="trajectoryControl" onclick="changeTrajectoryState()">Show Trajectory</button>
-        <button id="boundaryCondition" onclick="changeBoundaryCondition()">Periodic Boundary</button>
+        <button id="boundaryCondition" onclick="changeBoundaryCondition()">Periodic Boundary</button><br>
+        <input type="checkbox" id="monitorControl" onchange="changeMonitorState()" /> Show Collision Monitor
       </div>
     </div>
     <div class="column right">
