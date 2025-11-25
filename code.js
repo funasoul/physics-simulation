@@ -30,22 +30,14 @@ function initialize() {
   var v_0 = [];
   molecule = [];
   v_0 = randomNormalDistribution();
-  molecule[0] = {
-    xvalue: canvasSize / 2,
-    yvalue: canvasSize / 2,
-    xvelocity: v_0[0] * Math.sqrt(m / M),
-    yvelocity: v_0[1] * Math.sqrt(m / M),
-    xclass: Math.floor(this.xvalue / (canvasSize / 10)),
-    yclass: Math.floor(this.yvalue / (canvasSize / 10))
-  };
-  for (var i = 1; i < N + 1; i++) {
+  for (var i = 0; i < N + 1; i++) {
     var position_x = Math.random() * canvasSize / Math.sqrt(N) + (i % Math.sqrt(N)) * canvasSize / Math.sqrt(N);
     var position_y = Math.random() * canvasSize / Math.sqrt(N) + Math.floor(i / Math.sqrt(N)) * canvasSize / Math.sqrt(N);
-    var distance_to_pollen = Math.sqrt(Math.pow(position_x - molecule[0].xvalue, 2) + Math.pow(position_y - molecule[0].yvalue, 2));
+    var distance_to_pollen = Math.sqrt(Math.pow(position_x - canvasSize / 2, 2) + Math.pow(position_y - canvasSize / 2, 2));
     while (distance_to_pollen <= (r + R)) {
       position_x = Math.random() * canvasSize;
       position_y = Math.random() * canvasSize;
-      distance_to_pollen = Math.sqrt(Math.pow(position_x - molecule[0].xvalue, 2) + Math.pow(position_y - molecule[0].yvalue, 2));
+      distance_to_pollen = Math.sqrt(Math.pow(position_x - canvasSize / 2, 2) + Math.pow(position_y - canvasSize / 2, 2));
     }
     var v = randomNormalDistribution();
     molecule[i] = {
@@ -85,23 +77,9 @@ function clearCanvas(canvasName) {
 }
 function drawParticles() {
   clearCanvas("myCanvas");
-  for (var i = 1; i < N + 1; i++) {
+  for (var i = 0; i < N + 1; i++) {
     createCircle(molecule[i].xvalue, molecule[i].yvalue, r, "#00BFFF", ctx_myCanvas);
   }
-  createCircle(molecule[0].xvalue, molecule[0].yvalue, R, "rgba(205,92,92,0.7)", ctx_myCanvas);
-  if (molecule[0].xvalue < R) {
-    createCircle(molecule[0].xvalue + canvasSize, molecule[0].yvalue, R, "rgba(205,92,92,0.7)", ctx_myCanvas);
-  }
-  else if (molecule[0].xvalue > (canvasSize - R)) {
-    createCircle(molecule[0].xvalue - canvasSize, molecule[0].yvalue, R, "rgba(205,92,92,0.7)", ctx_myCanvas);
-  }
-  if (molecule[0].yvalue < R) {
-    createCircle(molecule[0].xvalue, molecule[0].yvalue + canvasSize, R, "rgba(205,92,92,0.7)", ctx_myCanvas);
-  }
-  else if (molecule[0].yvalue > (canvasSize - R)) {
-    createCircle(molecule[0].xvalue, molecule[0].yvalue - canvasSize, R, "rgba(205,92,92,0.7)", ctx_myCanvas);
-  }
-
 }
 function drawTrajectory() {
   createCircle(molecule[0].xvalue, molecule[0].yvalue, 0.5, "rgba(143,188,143,0.6)", ctx_myLayer);
